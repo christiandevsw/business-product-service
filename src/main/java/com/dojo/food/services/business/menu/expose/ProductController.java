@@ -27,6 +27,7 @@ import java.util.Map;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("products")
 public class ProductController {
     private ProductService productService;
     private CategoryService categoryService;
