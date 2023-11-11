@@ -1,0 +1,41 @@
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+  cloud:
+    kubernetes:
+      enabled: false
+
+
+management:
+  endpoints:
+    web:
+      base-path: '/application/dojo/v1/product/actuator'
+
+
+
+
+  dojo:
+    error-code:
+      expired-session:
+        code: TL0050
+        description: Sessión expirada.
+      invalid-session:
+        code: TL0051
+        description: Sesión Inválida.
+      already-exists-session:
+        code: TL0052
+        description: Error al crear la sesión, el usuario ya tiene una sesion abierta
+      not-registered-device:
+        code: TL0053
+        description: Dispositivo no afiliado.
+      forbidden-login:
+        code: TL0054
+        description: El usuario no esta asociado al dispositivo.
+      remove-cache-error:
+        code: TL0055
+        description: Ocurrió un error al eliminar una de las cachés de datos.
+
+server:
+  port: 8085
