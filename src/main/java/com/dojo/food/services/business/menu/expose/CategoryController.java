@@ -79,23 +79,14 @@ public class CategoryController {
 
 
     @PostMapping
-    public ResponseEntity<?> createNewCategory(@Valid CategoryDTO categoryDto, BindingResult result, @RequestPart MultipartFile file) {
+    public ResponseEntity<?> createNewCategory(@Valid @RequestBody CategoryDTO categoryDto, BindingResult result) {
+        System.out.println(categoryDto);
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
             return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
         }
 
-        if (!file.isEmpty()) {
-            try {
-                categoryDto.setPhoto(file.getBytes());
-            } catch (IOException e) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("message", "Ocurrió un error al seleccionar la foto");
-                map.put("error", e.getCause().getMessage());
-                return new ResponseEntity<Map<String, Object>>(map, HttpStatus.BAD_REQUEST);
-            }
-        }
         try {
             CategoryDTO categoryDTO = categoryService.create(categoryDto);
             return new ResponseEntity<CategoryDTO>(categoryDTO, HttpStatus.CREATED);
@@ -108,23 +99,12 @@ public class CategoryController {
     }
 
     @PutMapping("/{uniqueIdentifier}")
-    public ResponseEntity<?> updateCurrentCategory(@Valid CategoryDTO categoryDTO, BindingResult result,
-                                                   @PathVariable String uniqueIdentifier, @RequestParam MultipartFile file) {
+    public ResponseEntity<?> updateCurrentCategory(@Valid @RequestBody CategoryDTO categoryDTO, BindingResult result,
+                                                   @PathVariable String uniqueIdentifier) {
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
             return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
-        }
-
-        if (!file.isEmpty()) {
-            try {
-                categoryDTO.setPhoto(file.getBytes());
-            } catch (IOException e) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("message", "Ocurrió un error al seleccionar la foto");
-                map.put("error", e.getCause().getMessage());
-                return new ResponseEntity<Map<String, Object>>(map, HttpStatus.BAD_REQUEST);
-            }
         }
 
         CategoryDTO dto;

@@ -27,7 +27,6 @@ import java.util.Map;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("products")
 public class ProductController {
     private ProductService productService;
     private CategoryService categoryService;
@@ -171,24 +170,14 @@ public class ProductController {
     }
 
     @PostMapping(value = "/new-product", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> createNewProduct(@Valid DetailProductDTO detailProductDTO, BindingResult result,
-                                              @RequestPart MultipartFile file) {
+    public ResponseEntity<?> createNewProduct(@Valid @RequestBody DetailProductDTO detailProductDTO, BindingResult result
+                                              ) {
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
             return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
         }
 
-        if (!file.isEmpty()) {
-            try {
-                detailProductDTO.setPhoto(file.getBytes());
-            } catch (IOException e) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("error", e.getCause().getMessage());
-                map.put("message", "Ocurrió un error al asignar la foto seleccionada");
-                return new ResponseEntity<Map<String, Object>>(map, HttpStatus.BAD_REQUEST);
-            }
-        }
         DetailProductDTO newProductDto;
         try {
             newProductDto = productService.create(detailProductDTO);
@@ -205,23 +194,13 @@ public class ProductController {
     }
 
     @PatchMapping("/update-product/{uniqueIdentifier}")
-    public ResponseEntity<?> updateCurrentProduct(@Valid DetailProductDTO detailProductDTO, BindingResult result,
-                                                  @PathVariable String uniqueIdentifier, @RequestParam MultipartFile file) {
+    public ResponseEntity<?> updateCurrentProduct(@Valid @RequestBody DetailProductDTO detailProductDTO, BindingResult result,
+                                                  @PathVariable String uniqueIdentifier) {
 
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
             return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
-        }
-        if (!file.isEmpty()) {
-            try {
-                detailProductDTO.setPhoto(file.getBytes());
-            } catch (IOException e) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("error", e.getCause().getMessage());
-                map.put("message", "Ocurrió un error al asignar la foto seleccionada");
-                return new ResponseEntity<Map<String, Object>>(map, HttpStatus.BAD_REQUEST);
-            }
         }
 
         DetailProductDTO dto;
