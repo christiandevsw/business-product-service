@@ -13,5 +13,5 @@ public class CategoryDTO {
     private String name;
     private String description;
     @JsonIgnore
-    private byte[] photo;
+    private String photo;
 }

@@ -38,8 +38,6 @@ public class Product {
     private String description;
     private Integer stock;
     private Boolean available;
-    @Lob()
-    @Column(columnDefinition = "LONGBLOB")
-    private byte[] photo;
+    private String photo;
 
 }

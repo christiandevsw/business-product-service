@@ -29,5 +29,10 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+directory:
+  photo:
+    product: ${PRODUCT_PHOTO_DIRECTORY}
+    category: ${CATEGORY_PHOTO_DIRECTORY}
+
 
 
