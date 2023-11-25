@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -35,6 +36,7 @@ import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
+@RefreshScope
 public class ProductController {
     private ProductService productService;
     private CategoryService categoryService;

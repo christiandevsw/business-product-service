@@ -4,6 +4,7 @@ import com.dojo.food.services.business.menu.product.business.CategoryService;
 import com.dojo.food.services.business.menu.product.model.dto.CategoryDTO;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -30,6 +31,7 @@ import java.util.UUID;
 @RestController
 @AllArgsConstructor
 @RequestMapping("categories")
+@RefreshScope
 public class CategoryController {
     private CategoryService categoryService;
     private Environment env;

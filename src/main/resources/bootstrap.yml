@@ -1,17 +1,29 @@
 spring:
+  application:
+    name: product-service
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
+  profiles:
+    active: dev
+
   cloud:
+    config:
+      uri: http://localhost:8888
+
     kubernetes:
       enabled: false
 
 
-management:
-  endpoints:
-    web:
-      base-path: '/application/dojo/v1/product/actuator'
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: *
+
+#      base-path: '/application/dojo/v1/product/actuator'
 
 
 
@@ -37,5 +49,5 @@ management:
         code: TL0055
         description: Ocurrió un error al eliminar una de las cachés de datos.
 
-server:
-  port: 8085
+#server:
+#  port: 8085
