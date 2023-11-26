@@ -8,12 +8,12 @@ import java.util.List;
 public interface CategoryService {
     List<CategoryDTO> listCategories();
 
-    CategoryDTO getById(String id);
+    CategoryDTO getById(Long id);
 
     CategoryDTO create(CategoryDTO categoryDTO);
 
-    CategoryDTO update(CategoryDTO categoryDTO, String id) throws DataAccessException;
+    CategoryDTO update(CategoryDTO categoryDTO, Long id) throws DataAccessException;
 
-    void deleteById(String id);
+    void deleteById(Long id);
 
 }

@@ -7,7 +7,7 @@ import java.util.Map;
 public interface BenefitService {
     BenefitDTO save(BenefitDTO benefitDTO);
 
-    BenefitDTO update(String id, BenefitDTO benefitDTO);
+    BenefitDTO update(Long id, BenefitDTO benefitDTO);
 
-    BenefitDTO delete(String id, Map<String, String> headers);
+    BenefitDTO delete(Long id, Map<String, Long> headers);
 }

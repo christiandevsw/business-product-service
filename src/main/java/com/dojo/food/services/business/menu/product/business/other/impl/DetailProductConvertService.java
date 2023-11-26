@@ -16,7 +16,7 @@ public class DetailProductConvertService implements ConvertService<Product, Deta
     public Product convertToEntity(DetailProductDTO t) {
         if (t != null) {
             Product product = new Product();
-            product.setUniqueIdentifier(t.getId());
+            product.setId(t.getId());
             product.setName(t.getName());
             product.setPrice(t.getPrice());
             product.setDscto(t.getDscto());
@@ -33,7 +33,7 @@ public class DetailProductConvertService implements ConvertService<Product, Deta
     @Override
     public DetailProductDTO convertToDto(Product t) {
         DetailProductDTO dto = new DetailProductDTO();
-        dto.setId(t.getUniqueIdentifier());
+        dto.setId(t.getId());
         dto.setName(t.getName());
         dto.setPrice(t.getPrice());
         dto.setDescription(t.getDescription());

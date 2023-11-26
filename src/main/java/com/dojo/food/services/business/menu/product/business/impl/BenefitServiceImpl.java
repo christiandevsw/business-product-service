@@ -31,13 +31,12 @@ public class BenefitServiceImpl implements BenefitService {
     @Transactional
     public BenefitDTO save(BenefitDTO benefitDTO) {
         DetailProductDTO detailProductDTO = benefitDTO.getProduct();
-        Optional<Category> optionalCategory = categoryRepository.findByUniqueIdentifier(detailProductDTO.getCategory().getId());
+        Optional<Category> optionalCategory = categoryRepository.findById(detailProductDTO.getCategory().getId());
         if (optionalCategory.isEmpty()) return null;
 
-        Optional<Product> optionalProduct = productRepository.findByUniqueIdentifier(detailProductDTO.getId());
+        Optional<Product> optionalProduct = productRepository.findById(detailProductDTO.getId());
         if (optionalProduct.isEmpty()) return null;
 
-        benefitDTO.setId(UUID.randomUUID().toString());
         Benefit newBenefit = benefitConvert.convertToEntity(benefitDTO);
         newBenefit.setProduct(optionalProduct.get());
         return benefitConvert.convertToDto(benefitRepository.save(newBenefit));
@@ -45,15 +44,15 @@ public class BenefitServiceImpl implements BenefitService {
 
     @Override
     @Transactional
-    public BenefitDTO update(String id, BenefitDTO benefitDTO) {
+    public BenefitDTO update(Long id, BenefitDTO benefitDTO) {
         DetailProductDTO detailProductDTO = benefitDTO.getProduct();
-        Optional<Category> optionalCategory = categoryRepository.findByUniqueIdentifier(detailProductDTO.getCategory().getId());
+        Optional<Category> optionalCategory = categoryRepository.findById(detailProductDTO.getCategory().getId());
         if (optionalCategory.isEmpty()) return null;
 
-        Optional<Product> optionalProduct = productRepository.findByUniqueIdentifier(detailProductDTO.getId());
+        Optional<Product> optionalProduct = productRepository.findById(detailProductDTO.getId());
         if (optionalProduct.isEmpty()) return null;
 
-        Optional<Benefit> optionalBenefit = benefitRepository.findByUniqueIdentifier(id);
+        Optional<Benefit> optionalBenefit = benefitRepository.findById(id);
 
         if (optionalBenefit.isEmpty()) return null;
         Benefit currentBenefit = optionalBenefit.get();
@@ -65,9 +64,9 @@ public class BenefitServiceImpl implements BenefitService {
 
     @Override
     @Transactional
-    public BenefitDTO delete(String id, Map<String, String> headers) {
+    public BenefitDTO delete(Long id, Map<String, Long> headers) {
         Optional<Benefit> optional = benefitRepository
-                .findByUniqueIdentifierAndProductUniqueIdentifierAndProductCategoryUniqueIdentifier(id,
+                .findByIdAndProductIdAndProductCategoryId(id,
                         headers.get(ConstantsService.PRODUCT), headers.get(ConstantsService.CATEGORY));
 
         if (optional.isPresent()) {

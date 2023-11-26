@@ -10,7 +10,5 @@ import java.util.Set;
 public interface BenefitRepository extends JpaRepository<Benefit, Long> {
     Set<Benefit> findByProductId(Long id);
 
-    Optional<Benefit> findByUniqueIdentifier(String uniqueIdentifier);
-
-    Optional<Benefit> findByUniqueIdentifierAndProductUniqueIdentifierAndProductCategoryUniqueIdentifier(String id, String ProductId, String CategoryId);
+    Optional<Benefit> findByIdAndProductIdAndProductCategoryId(Long id, Long ProductId, Long CategoryId);
 }

@@ -29,23 +29,22 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public CategoryDTO getById(String id) {
-        Optional<Category> optional = categoryRepository.findByUniqueIdentifier(id);
+    public CategoryDTO getById(Long id) {
+        Optional<Category> optional = categoryRepository.findById(id);
         if (optional.isPresent()) return serviceConvert.convertToDto(optional.get());
         return null;
     }
 
     @Transactional
     public CategoryDTO create(CategoryDTO dto) {
-        dto.setId(UUID.randomUUID().toString());
         Category newCategory = categoryRepository.save(serviceConvert.convertToEntity(dto));
         return serviceConvert.convertToDto(newCategory);
     }
 
     @Override
     @Transactional
-    public CategoryDTO update(CategoryDTO categoryDTO, String id) throws DataAccessException {
-        Optional<Category> optional = categoryRepository.findByUniqueIdentifier(id);
+    public CategoryDTO update(CategoryDTO categoryDTO, Long id) throws DataAccessException {
+        Optional<Category> optional = categoryRepository.findById(id);
         if (optional.isEmpty()) return null;
 
         Category currentCategory = optional.get();
@@ -54,17 +53,15 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryDTO.getPhoto() != null) {
             currentCategory.setPhoto(categoryDTO.getPhoto());
         }
+        categoryDTO.setPhoto(null);
         return serviceConvert.convertToDto(categoryRepository.save(currentCategory));
 
     }
 
     @Override
     @Transactional
-    public void deleteById(String id) {
-        Optional<Category> optional = categoryRepository.findByUniqueIdentifier(id);
-        if (optional.isPresent()) {
-            categoryRepository.delete(optional.get());
-        }
+    public void deleteById(Long id) {
+        categoryRepository.deleteById(id);
     }
 
 

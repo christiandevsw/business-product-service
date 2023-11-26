@@ -69,11 +69,11 @@ public class ProductController {
         return new ResponseEntity<>(productDTOS, HttpStatus.OK);
     }
 
-    @GetMapping("/list-by-category/{identifierCategory}")
-    public ResponseEntity<?> listProductsByCategory(@PathVariable String identifierCategory) {
+    @GetMapping("/list-by-category/{categoryId}")
+    public ResponseEntity<?> listProductsByCategory(@PathVariable Long categoryId) {
         CategoryDTO categoryDTO;
         try {
-            categoryDTO = categoryService.getById(identifierCategory);
+            categoryDTO = categoryService.getById(categoryId);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -81,9 +81,9 @@ public class ProductController {
             return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if (categoryDTO == null)
-            return new ResponseEntity<String>("No existe una categoria en la BBDD para el id: ".concat(identifierCategory.toString()), HttpStatus.OK);
+            return new ResponseEntity<String>("No existe una categoria en la BBDD", HttpStatus.OK);
 
-        return new ResponseEntity<List<BasicProductDTO>>(productService.listProductsByCategory(identifierCategory), HttpStatus.OK);
+        return new ResponseEntity<List<BasicProductDTO>>(productService.listProductsByCategory(categoryId), HttpStatus.OK);
     }
 
     @GetMapping("/list-by-price/{price}")
@@ -103,11 +103,11 @@ public class ProductController {
         return new ResponseEntity<List<BasicProductDTO>>(productsDtos, HttpStatus.OK);
     }
 
-    @GetMapping("find/{categoryIdentifier}/{name}")
-    public ResponseEntity<?> findProductByCategoryAndName(@PathVariable String categoryIdentifier, @PathVariable String name) {
+    @GetMapping("find/{categoryId}/{name}")
+    public ResponseEntity<?> findProductByCategoryAndName(@PathVariable Long categoryId, @PathVariable String name) {
         List<BasicProductDTO> productsDtos;
         try {
-            productsDtos = productService.listProductsByNameAndCategory(name, categoryIdentifier);
+            productsDtos = productService.listProductsByNameAndCategory(name, categoryId);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -121,11 +121,11 @@ public class ProductController {
         return new ResponseEntity<List<BasicProductDTO>>(productsDtos, HttpStatus.OK);
     }
 
-    @GetMapping("/{uniqueIdentifier}")
-    public ResponseEntity<?> getProduct(@PathVariable String uniqueIdentifier) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProduct(@PathVariable Long id) {
         DetailProductDTO detailProductDTO;
         try {
-            detailProductDTO = productService.getProductByIdentifier(uniqueIdentifier);
+            detailProductDTO = productService.getProduct(id);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -141,33 +141,17 @@ public class ProductController {
         return new ResponseEntity<DetailProductDTO>(detailProductDTO, HttpStatus.OK);
     }
 
-//    @GetMapping("/uploads/img/{uniqueIdentifier}")
-//    public ResponseEntity<?> showPhoto(@PathVariable String uniqueIdentifier) {
-//        DetailProductDTO dto;
-//        try {
-//            dto = productService.getProductByIdentifier(uniqueIdentifier);
-//        } catch (DataAccessException e) {
-//            Map<String, Object> map = new HashMap<>();
-//            map.put("error", e.getMostSpecificCause().getMessage());
-//            map.put("message", "Ocurrió un error en la BBDD");
-//            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//
-//        if (dto == null || dto.getPhoto() == null) {
-//            return ResponseEntity.notFound().build();
-//        }
-//
-//        Resource imagen = new ByteArrayResource(dto.getPhoto());
-//        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(imagen);
-//    }
 
-    @GetMapping("/uploads/img/{filename:.+}")
-    public ResponseEntity<Resource> showPhoto(@PathVariable String filename){
-        Path pathPhoto=Paths.get(env.getProperty("directory.photo.product")).resolve(filename).toAbsolutePath();
+    @GetMapping("/uploads/img/{id}")
+    public ResponseEntity<Resource> showPhoto(@PathVariable Long id){
+        DetailProductDTO detail=productService.getProduct(id);
+        if(detail==null || detail.getPhoto()==null) return ResponseEntity.notFound().build();
+
+        Path pathPhoto=Paths.get(env.getProperty("directory.photo.product")).resolve(detail.getPhoto()).toAbsolutePath();
         Resource resource=null;
         try {
             resource=new UrlResource(pathPhoto.toUri());
-            if (!resource.exists() && !resource.isReadable())
+            if (!resource.exists() || !resource.isReadable())
                 throw new RuntimeException("Error: no se puede cargar la imagen");
         }catch (MalformedURLException e){
             e.printStackTrace();
@@ -177,13 +161,11 @@ public class ProductController {
 
     }
 
-
-
-    @GetMapping("/available/{uniqueIdentifier}")
-    public ResponseEntity<?> verifyStatusToProduct(@PathVariable String uniqueIdentifier) {
+    @GetMapping("/available/{id}")
+    public ResponseEntity<?> verifyStatusToProduct(@PathVariable Long id) {
         Map<String, Object> response;
         try {
-            response = productService.verifyProductIfExistsByIdentifier(uniqueIdentifier);
+            response = productService.verifyProductIfExistsByIdentifier(id);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -197,6 +179,7 @@ public class ProductController {
 
         return new ResponseEntity<Map<String, Object>>(response, HttpStatus.OK);
     }
+
 
     @PostMapping(value = "/new-product", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> createNewProduct(@Valid DetailProductDTO detailProductDTO, BindingResult result,
@@ -237,9 +220,9 @@ public class ProductController {
         return new ResponseEntity<DetailProductDTO>(newProductDto, HttpStatus.CREATED);
     }
 
-    @PatchMapping("/update-product/{uniqueIdentifier}")
+    @PatchMapping("/update-product/{id}")
     public ResponseEntity<?> updateCurrentProduct(@Valid @RequestBody DetailProductDTO detailProductDTO, BindingResult result,
-                                                  @PathVariable String uniqueIdentifier) {
+                                                  @PathVariable Long id) {
 
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
@@ -249,7 +232,7 @@ public class ProductController {
 
         DetailProductDTO dto;
         try {
-            dto = productService.update(detailProductDTO, uniqueIdentifier);
+            dto = productService.update(detailProductDTO, id);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -263,12 +246,12 @@ public class ProductController {
         return new ResponseEntity<DetailProductDTO>(dto, HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/delete-product/{uniqueIdentifier}")
-    public ResponseEntity<?> deleteProduct(@PathVariable String uniqueIdentifier, @RequestHeader Map<String, String> headers) {
+    @DeleteMapping("/delete-product/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id, @RequestHeader Map<String, Long> headers) {
         BasicProductDTO basicProductDTO;
 
         try {
-            basicProductDTO = productService.deleteProduct(uniqueIdentifier, headers);
+            basicProductDTO = productService.deleteProduct(id, headers);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -278,7 +261,7 @@ public class ProductController {
 
         if (basicProductDTO == null)
             return new ResponseEntity<String>("No existe el producto en la BBDD", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<String>("Se eliminó correctamente el producto con id: " + uniqueIdentifier, HttpStatus.OK);
+        return new ResponseEntity<String>("Se eliminó correctamente el producto", HttpStatus.OK);
     }
 
 }

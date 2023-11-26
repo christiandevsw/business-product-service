@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class BenefitDTO {
-    private String id;
+    private Long id;
     private String description;
     @JsonSerialize(using = DetailProductDTOSerializer.class)
     private DetailProductDTO product;

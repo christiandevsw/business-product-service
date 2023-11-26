@@ -15,7 +15,7 @@ public class BenefitConvertService implements ConvertService<Benefit, BenefitDTO
     public Benefit convertToEntity(BenefitDTO t) {
         if (t != null) {
             Benefit benefit = new Benefit();
-            benefit.setUniqueIdentifier(t.getId());
+            benefit.setId(t.getId());
             benefit.setDescription(t.getDescription());
             benefit.setProduct(detailProductConvert.convertToEntity(t.getProduct()));
             return benefit;
@@ -26,7 +26,7 @@ public class BenefitConvertService implements ConvertService<Benefit, BenefitDTO
     @Override
     public BenefitDTO convertToDto(Benefit t) {
         BenefitDTO benefitDTO = new BenefitDTO();
-        benefitDTO.setId(t.getUniqueIdentifier());
+        benefitDTO.setId(t.getId());
         benefitDTO.setDescription(t.getDescription());
         benefitDTO.setProduct(detailProductConvert.convertToDto(t.getProduct()));
         return benefitDTO;

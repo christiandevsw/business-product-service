@@ -44,8 +44,8 @@ public class BenefitController {
     }
 
 
-    @PutMapping("/{uniqueIdentifier}")
-    public ResponseEntity<?> updateBenefit(@Valid @RequestBody BenefitDTO dto, BindingResult result, @PathVariable String uniqueIdentifier) {
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateBenefit(@Valid @RequestBody BenefitDTO dto, BindingResult result, @PathVariable Long id) {
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
@@ -54,7 +54,7 @@ public class BenefitController {
 
         BenefitDTO benefitDTO;
         try {
-            benefitDTO = benefitService.update(uniqueIdentifier, dto);
+            benefitDTO = benefitService.update(id, dto);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -68,11 +68,11 @@ public class BenefitController {
         return new ResponseEntity<BenefitDTO>(benefitDTO, HttpStatus.CREATED);
     }
 
-    @DeleteMapping("{uniqueIdentifier}")
-    public ResponseEntity<?> deleteBenefit(@PathVariable String uniqueIdentifier, @RequestHeader Map<String, String> headers) {
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deleteBenefit(@PathVariable Long id, @RequestHeader Map<String, Long> headers) {
         BenefitDTO benefitDTO;
         try {
-            benefitDTO = benefitService.delete(uniqueIdentifier, headers);
+            benefitDTO = benefitService.delete(id, headers);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
@@ -82,7 +82,7 @@ public class BenefitController {
 
         if (benefitDTO == null)
             return new ResponseEntity<String>("No existe el beneficio en la BBDD", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<String>("Se eliminó correctamente el producto con id: " + uniqueIdentifier, HttpStatus.OK);
+        return new ResponseEntity<String>("Se eliminó correctamente el beneficio", HttpStatus.OK);
     }
 
 }

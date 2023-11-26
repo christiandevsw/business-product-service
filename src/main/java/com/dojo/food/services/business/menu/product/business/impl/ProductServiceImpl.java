@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BasicProductDTO> listProductsByCategory(String categoryId) {
+    public List<BasicProductDTO> listProductsByCategory(Long categoryId) {
         return productRepository.getProductsByCategory(categoryId).stream()
                 .map(basicProductConvert::convertToDto).collect(Collectors.toList());
     }
@@ -63,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BasicProductDTO> listProductsByNameAndCategory(String name, String categoryId) {
+    public List<BasicProductDTO> listProductsByNameAndCategory(String name, Long categoryId) {
         return productRepository.findByNameAndCategory(name, categoryId).stream()
                 .map(basicProductConvert::convertToDto).collect(Collectors.toList());
 
@@ -71,8 +71,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public DetailProductDTO getProductByIdentifier(String id) {
-        Optional<Product> optionalProduct = productRepository.findByUniqueIdentifier(id);
+    public DetailProductDTO getProduct(Long id) {
+        Optional<Product> optionalProduct = productRepository.findById(id);
         if (optionalProduct.isPresent()) {
             return detailProductConvert.convertToDto(optionalProduct.get());
         }
@@ -81,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public DetailProductDTO retrieveBenefits(DetailProductDTO dto) {
-        Product product = productRepository.findByUniqueIdentifier(dto.getId()).get();
+        Product product = productRepository.findById(dto.getId()).get();
         Set<Benefit> benefits = benefitRepository.findByProductId(product.getId());
         if (benefits.size() > 0) {
             Set<BenefitDTO> benefitsDTO = benefits.stream().map(b -> benefitConvert.convertToDto(b)).collect(Collectors.toSet());
@@ -92,8 +92,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> verifyProductIfExistsByIdentifier(String id) {
-        Optional<Product> optionalProduct = productRepository.findByUniqueIdentifier(id);
+    public Map<String, Object> verifyProductIfExistsByIdentifier(Long id) {
+        Optional<Product> optionalProduct = productRepository.findById(id);
         if (optionalProduct.isPresent()) {
             Map<String, Object> map = new HashMap<>();
             map.put("product", basicProductConvert.convertToDto(optionalProduct.get()));
@@ -106,11 +106,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public DetailProductDTO create(DetailProductDTO dto) {
-        dto.setId(UUID.randomUUID().toString());
         if (dto.getDscto() == null) dto.setDscto(BigDecimal.ZERO);
         if (dto.getCategory() != null) {
-
-            Optional<Category> optional = categoryRepository.findByUniqueIdentifier(dto.getCategory().getId());
+            Optional<Category> optional = categoryRepository.findById(dto.getCategory().getId());
             if (optional.isEmpty()) return null;
             Product newProduct = detailProductConvert.convertToEntity(dto);
             newProduct.setCategory(optional.get());
@@ -121,13 +119,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public DetailProductDTO update(DetailProductDTO dto, String identifier) throws DataAccessException {
+    public DetailProductDTO update(DetailProductDTO dto, Long id) throws DataAccessException {
 
         if (dto.getCategory() != null) {
-            Optional<Category> optionalCategory = categoryRepository.findByUniqueIdentifier(dto.getCategory().getId());
+            Optional<Category> optionalCategory = categoryRepository.findById(dto.getCategory().getId());
             if (optionalCategory.isEmpty()) return null;
 
-            Optional<Product> optional = productRepository.findByUniqueIdentifier(identifier);
+            Optional<Product> optional = productRepository.findById(id);
             if (optional.isEmpty()) return null;
             Product currentProduct = optional.get();
             currentProduct.setName(dto.getName());
@@ -145,9 +143,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public BasicProductDTO deleteProduct(String identifier, Map<String, String> headers) {
+    public BasicProductDTO deleteProduct(Long id, Map<String, Long> headers) {
         Optional<Product> optional = productRepository
-                .findByUniqueIdentifierAndCategoryUniqueIdentifier(identifier, headers.get(ConstantsService.CATEGORY));
+                .findByIdAndCategoryId(id, headers.get(ConstantsService.CATEGORY));
         if (optional.isPresent()) {
             productRepository.delete(optional.get());
             return basicProductConvert.convertToDto(optional.get());

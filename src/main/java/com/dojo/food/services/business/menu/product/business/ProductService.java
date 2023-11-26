@@ -13,22 +13,22 @@ public interface ProductService {
 
     List<BasicProductDTO> getAllProducts();
 
-    List<BasicProductDTO> listProductsByCategory(String categoryId);
+    List<BasicProductDTO> listProductsByCategory(Long categoryId);
 
     List<BasicProductDTO> getProductsByPrice(BigDecimal price);
 
-    List<BasicProductDTO> listProductsByNameAndCategory(String name, String categoryId);
+    List<BasicProductDTO> listProductsByNameAndCategory(String name, Long categoryId);
 
-    DetailProductDTO getProductByIdentifier(String id);
+    DetailProductDTO getProduct(Long id);
 
     DetailProductDTO retrieveBenefits(DetailProductDTO dto);
 
-    Map<String, Object> verifyProductIfExistsByIdentifier(String id);
+    Map<String, Object> verifyProductIfExistsByIdentifier(Long id);
 
     DetailProductDTO create(DetailProductDTO detailProductDTO);
 
-    DetailProductDTO update(DetailProductDTO detailProductDTO, String identifier) throws DataAccessException;
+    DetailProductDTO update(DetailProductDTO detailProductDTO, Long id) throws DataAccessException;
 
-    BasicProductDTO deleteProduct(String id, Map<String, String> headers);
+    BasicProductDTO deleteProduct(Long id, Map<String, Long> headers);
 
 }

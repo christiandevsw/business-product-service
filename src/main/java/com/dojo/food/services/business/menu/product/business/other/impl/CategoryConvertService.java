@@ -13,7 +13,7 @@ public class CategoryConvertService implements ConvertService<Category, Category
         if (t != null) {
             Category category = new Category();
             category.setName(t.getName());
-            category.setUniqueIdentifier(t.getId());
+            category.setId(t.getId());
             category.setDescription(t.getDescription());
             category.setPhoto(t.getPhoto());
             return category;
@@ -24,7 +24,7 @@ public class CategoryConvertService implements ConvertService<Category, Category
     @Override
     public CategoryDTO convertToDto(Category t) {
         CategoryDTO dto = new CategoryDTO();
-        dto.setId(t.getUniqueIdentifier());
+        dto.setId(t.getId());
         dto.setName(t.getName());
         dto.setDescription(t.getDescription());
         dto.setPhoto(t.getPhoto());

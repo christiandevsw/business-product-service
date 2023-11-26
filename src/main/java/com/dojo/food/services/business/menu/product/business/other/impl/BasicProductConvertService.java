@@ -11,7 +11,7 @@ public class BasicProductConvertService implements ConvertService<Product, Basic
     public Product convertToEntity(BasicProductDTO t) {
         if (t != null) {
             Product product = new Product();
-            product.setUniqueIdentifier(t.getId());
+            product.setId(t.getId());
             product.setName(t.getName());
             product.setDescription(t.getDescription());
             product.setPrice(t.getPrice());
@@ -26,7 +26,7 @@ public class BasicProductConvertService implements ConvertService<Product, Basic
     @Override
     public BasicProductDTO convertToDto(Product t) {
         BasicProductDTO basicProductDTO = new BasicProductDTO();
-        basicProductDTO.setId(t.getUniqueIdentifier());
+        basicProductDTO.setId(t.getId());
         basicProductDTO.setName(t.getName());
         basicProductDTO.setPrice(t.getPrice());
         basicProductDTO.setDscto(t.getDscto());

@@ -16,7 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DetailProductDTO {
-    private String id;
+    private Long id;
     private String name;
     private BigDecimal price;
     private String description;
