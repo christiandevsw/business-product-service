@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @Data
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "unique_identifier")
     private String uniqueIdentifier;
@@ -35,6 +35,7 @@ public class Product {
     @NotNull
     private Category category;
     @NotBlank
+    @Size(min = 10,max = 255)
     private String description;
     private Integer stock;
     private Boolean available;

@@ -1,6 +1,7 @@
 package com.dojo.food.services.business.menu.product.business.impl;
 
 import com.dojo.food.services.business.menu.product.business.ProductService;
+import com.dojo.food.services.business.menu.product.business.UploadFileService;
 import com.dojo.food.services.business.menu.product.business.other.impl.BasicProductConvertService;
 import com.dojo.food.services.business.menu.product.business.other.impl.BenefitConvertService;
 import com.dojo.food.services.business.menu.product.business.other.impl.DetailProductConvertService;
@@ -14,25 +15,50 @@ import com.dojo.food.services.business.menu.product.model.entity.Benefit;
 import com.dojo.food.services.business.menu.product.model.entity.Category;
 import com.dojo.food.services.business.menu.product.model.entity.Product;
 import com.dojo.food.services.business.menu.product.util.ConstantsService;
-import lombok.AllArgsConstructor;
-import org.springframework.dao.DataAccessException;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
 public class ProductServiceImpl implements ProductService {
-    private ProductRepository productRepository;
-    private CategoryRepository categoryRepository;
-    private BenefitRepository benefitRepository;
-    private BasicProductConvertService basicProductConvert;
-    private DetailProductConvertService detailProductConvert;
-    private BenefitConvertService benefitConvert;
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final BenefitRepository benefitRepository;
+    private final BasicProductConvertService basicProductConvert;
+    private final DetailProductConvertService detailProductConvert;
+    private final BenefitConvertService benefitConvert;
+    private final UploadFileService uploadFileService;
+    private final Environment env;
+    private final String IMG_DIRECTORY;
+    private static Long IdSig;
 
+
+    public ProductServiceImpl(ProductRepository productRepository, CategoryRepository categoryRepository,
+                              BenefitRepository benefitRepository, BasicProductConvertService basicProductConvert,
+                              DetailProductConvertService detailProductConvert, BenefitConvertService benefitConvert,
+                              UploadFileService uploadFileService, Environment env) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.benefitRepository = benefitRepository;
+        this.basicProductConvert = basicProductConvert;
+        this.detailProductConvert = detailProductConvert;
+        this.benefitConvert = benefitConvert;
+        this.uploadFileService = uploadFileService;
+        this.env = env;
+        IMG_DIRECTORY=env.getProperty("directory.photo.product");
+        IdSig= (long) (totalProducts()+1);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -70,22 +96,36 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DetailProductDTO getProduct(Long id) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isPresent()) {
-            return detailProductConvert.convertToDto(optionalProduct.get());
-        }
-        return null;
+    public BasicProductDTO getBasicProduct(Long id) {
+        Optional<Product> optional = productRepository.findById(id);
+        return optional.map(basicProductConvert::convertToDto).orElse(null);
     }
 
     @Override
+    public BasicProductDTO getUniqueProduct(Long id, Map<String, String> headers) {
+        Optional<Product> optional = productRepository
+                .findByIdAndCategoryId(id, Long.parseLong(headers.get(ConstantsService.CATEGORY) ));
+
+        return optional.map(basicProductConvert::convertToDto).orElse(null);
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DetailProductDTO getDetail(Long id) {
+        Optional<Product> optionalProduct = productRepository.findById(id);
+        return optionalProduct.map(detailProductConvert::convertToDto).orElse(null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public DetailProductDTO retrieveBenefits(DetailProductDTO dto) {
-        Product product = productRepository.findById(dto.getId()).get();
-        Set<Benefit> benefits = benefitRepository.findByProductId(product.getId());
-        if (benefits.size() > 0) {
-            Set<BenefitDTO> benefitsDTO = benefits.stream().map(b -> benefitConvert.convertToDto(b)).collect(Collectors.toSet());
-            dto.setBenefits(benefitsDTO);
+        if (dto.getId() != null) {
+            Set<Benefit> benefits = benefitRepository.findByProductId(dto.getId());
+            if (!benefits.isEmpty()) {
+                Set<BenefitDTO> benefitsDTO = benefits.stream().map(benefitConvert::convertToDto).collect(Collectors.toSet());
+                dto.setBenefits(benefitsDTO);
+            }
         }
         return dto;
     }
@@ -105,51 +145,90 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public DetailProductDTO create(DetailProductDTO dto) {
+    public DetailProductDTO create(DetailProductDTO dto, MultipartFile file) {
+        if (dto.getCategory() == null) return null;
+        Optional<Category> optional = categoryRepository.findById(dto.getCategory().getId());
+        if (optional.isEmpty()) return null;
+
         if (dto.getDscto() == null) dto.setDscto(BigDecimal.ZERO);
-        if (dto.getCategory() != null) {
-            Optional<Category> optional = categoryRepository.findById(dto.getCategory().getId());
-            if (optional.isEmpty()) return null;
-            Product newProduct = detailProductConvert.convertToEntity(dto);
-            newProduct.setCategory(optional.get());
 
-            return detailProductConvert.convertToDto(productRepository.save(newProduct));
+        if (!file.isEmpty()) dto.setPhoto(uploadFileService.getFileNameBasedOnId(IdSig,file));
+
+        Product product = detailProductConvert.convertToEntity(dto);
+        product.setId(IdSig);
+        product.setCategory(optional.get());
+
+        product = productRepository.save(product);
+        if (!file.isEmpty()) {
+            try {
+                Path absolutePath = Paths.get(IMG_DIRECTORY).resolve(dto.getPhoto()).toAbsolutePath();
+                Files.copy(file.getInputStream(), absolutePath);
+            } catch (IOException e) {
+                throw new RuntimeException("Se creo el producto, pero no se guardo su foto");
+            }
         }
-        return null;
-    }
 
-    @Override
-    public DetailProductDTO update(DetailProductDTO dto, Long id) throws DataAccessException {
-
-        if (dto.getCategory() != null) {
-            Optional<Category> optionalCategory = categoryRepository.findById(dto.getCategory().getId());
-            if (optionalCategory.isEmpty()) return null;
-
-            Optional<Product> optional = productRepository.findById(id);
-            if (optional.isEmpty()) return null;
-            Product currentProduct = optional.get();
-            currentProduct.setName(dto.getName());
-            currentProduct.setPrice(dto.getPrice());
-            currentProduct.setDescription(dto.getDescription());
-            currentProduct.setStock(dto.getStock());
-            currentProduct.setAvailable(dto.getAvailable());
-            currentProduct.setCategory(optionalCategory.get());
-            currentProduct.setDscto(dto.getDscto());
-            currentProduct.setPhoto(dto.getPhoto());
-            return detailProductConvert.convertToDto(productRepository.save(currentProduct));
-        }
-        return null;
+        IdSig++;
+        return detailProductConvert.convertToDto(product);
     }
 
     @Override
     @Transactional
-    public BasicProductDTO deleteProduct(Long id, Map<String, Long> headers) {
-        Optional<Product> optional = productRepository
-                .findByIdAndCategoryId(id, headers.get(ConstantsService.CATEGORY));
-        if (optional.isPresent()) {
-            productRepository.delete(optional.get());
-            return basicProductConvert.convertToDto(optional.get());
+    public DetailProductDTO update(Long id, DetailProductDTO dto, MultipartFile file) {
+        if (dto.getCategory() == null) return null;
+        Optional<Category> optionalCategory = categoryRepository.findById(dto.getCategory().getId());
+        if (optionalCategory.isEmpty()) return null;
+
+        Optional<Product> optional = productRepository.findById(id);
+        if (optional.isEmpty()) return null;
+
+        String filename=optional.get().getPhoto();
+        Product currentProduct = optional.get();
+        currentProduct.setName(dto.getName());
+        currentProduct.setPrice(dto.getPrice());
+        currentProduct.setDescription(dto.getDescription());
+        currentProduct.setStock(dto.getStock());
+        currentProduct.setAvailable(dto.getAvailable());
+        currentProduct.setCategory(optionalCategory.get());
+        currentProduct.setDscto(dto.getDscto());
+        currentProduct.setPhoto(dto.getPhoto());
+        if (!file.isEmpty()) {
+            dto.setPhoto(uploadFileService.getFileNameBasedOnId(id,file));
+            currentProduct.setPhoto(dto.getPhoto());
         }
-        return null;
+
+        currentProduct = productRepository.save(currentProduct);
+
+        if (!file.isEmpty()) {
+            try {
+                uploadFileService.copy(IMG_DIRECTORY, dto.getPhoto(), file);
+            } catch (IOException e) {
+                throw new RuntimeException("Error al actualizar producto en la BBDD. No se pudo actualizar la foto");
+            }
+        }
+
+        if (filename != null && !filename.isEmpty()) {
+            if (!uploadFileService.delete(IMG_DIRECTORY, filename))
+                throw new RuntimeException("Se actualizo el producto pero no se pudo eliminar la foto anterior");
+        }
+
+
+        return detailProductConvert.convertToDto(currentProduct);
     }
+
+    @Override
+    @Transactional
+    public void delete(BasicProductDTO dto) {
+        productRepository.deleteById(dto.getId());
+        if (dto.getPhoto() != null && !dto.getPhoto().isEmpty())
+            if (!uploadFileService.delete(IMG_DIRECTORY, dto.getPhoto()) &&
+                    uploadFileService.verifyExistFile(IMG_DIRECTORY, dto.getPhoto()))
+                throw new RuntimeException("Error al eliminar el producto en la BBDD, no se pudo eliminar su foto");
+    }
+
+    @Override
+    public Resource getImage(BasicProductDTO dto) throws MalformedURLException {
+        return uploadFileService.load(IMG_DIRECTORY, dto.getPhoto());
+    }
+
 }

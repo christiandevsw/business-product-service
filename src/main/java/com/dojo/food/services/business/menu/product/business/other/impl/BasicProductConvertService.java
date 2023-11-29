@@ -16,7 +16,7 @@ public class BasicProductConvertService implements ConvertService<Product, Basic
             product.setDescription(t.getDescription());
             product.setPrice(t.getPrice());
             product.setDscto(t.getDscto());
-
+            product.setPhoto(t.getPhoto());
             return product;
 
         }
@@ -31,6 +31,7 @@ public class BasicProductConvertService implements ConvertService<Product, Basic
         basicProductDTO.setPrice(t.getPrice());
         basicProductDTO.setDscto(t.getDscto());
         basicProductDTO.setDescription(t.getDescription());
+        basicProductDTO.setPhoto(t.getPhoto());
         return basicProductDTO;
     }
 }

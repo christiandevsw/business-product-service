@@ -23,7 +23,7 @@ public class Category {
     @Size(min = 4,max = 20)
     private String name;
     @NotBlank
-    @Size(min = 20,max = 255)
+    @Size(min = 10,max = 255)
     private String description;
     private String photo;
 }

@@ -7,13 +7,8 @@ import com.dojo.food.services.business.menu.product.model.dto.CategoryDTO;
 import com.dojo.food.services.business.menu.product.model.dto.DetailProductDTO;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,16 +18,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -40,18 +30,16 @@ import java.util.UUID;
 public class ProductController {
     private ProductService productService;
     private CategoryService categoryService;
-    private Environment env;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProductController.class);
 
     @GetMapping("/total-products")
     public ResponseEntity<?> totalProducts() {
         try {
-            return new ResponseEntity<String>(String.format("el total de productos es %d", productService.totalProducts()), HttpStatus.OK);
+            return new ResponseEntity<>(String.format("el total de productos es %d", productService.totalProducts()), HttpStatus.OK);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -64,7 +52,7 @@ public class ProductController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Error al recuperar los productos de la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>(productDTOS, HttpStatus.OK);
     }
@@ -78,12 +66,12 @@ public class ProductController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if (categoryDTO == null)
-            return new ResponseEntity<String>("No existe una categoria en la BBDD", HttpStatus.OK);
+            return new ResponseEntity<>("No existe una categoria en la BBDD", HttpStatus.OK);
 
-        return new ResponseEntity<List<BasicProductDTO>>(productService.listProductsByCategory(categoryId), HttpStatus.OK);
+        return new ResponseEntity<>(productService.listProductsByCategory(categoryId), HttpStatus.OK);
     }
 
     @GetMapping("/list-by-price/{price}")
@@ -95,12 +83,12 @@ public class ProductController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         if (productsDtos.size() == 0) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontraron productos para este precio");
         }
-        return new ResponseEntity<List<BasicProductDTO>>(productsDtos, HttpStatus.OK);
+        return new ResponseEntity<>(productsDtos, HttpStatus.OK);
     }
 
     @GetMapping("find/{categoryId}/{name}")
@@ -112,25 +100,25 @@ public class ProductController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (productsDtos.size() == 0)
-            return new ResponseEntity<String>("No se encontraron productos en la BBDD!", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No se encontraron productos en la BBDD!", HttpStatus.NOT_FOUND);
 
-        return new ResponseEntity<List<BasicProductDTO>>(productsDtos, HttpStatus.OK);
+        return new ResponseEntity<>(productsDtos, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduct(@PathVariable Long id) {
         DetailProductDTO detailProductDTO;
         try {
-            detailProductDTO = productService.getProduct(id);
+            detailProductDTO = productService.getDetail(id);
         } catch (DataAccessException e) {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (detailProductDTO == null)
@@ -138,27 +126,25 @@ public class ProductController {
 
 
         detailProductDTO = productService.retrieveBenefits(detailProductDTO);
-        return new ResponseEntity<DetailProductDTO>(detailProductDTO, HttpStatus.OK);
+        return new ResponseEntity<>(detailProductDTO, HttpStatus.OK);
     }
 
 
     @GetMapping("/uploads/img/{id}")
-    public ResponseEntity<Resource> showPhoto(@PathVariable Long id){
-        DetailProductDTO detail=productService.getProduct(id);
-        if(detail==null || detail.getPhoto()==null) return ResponseEntity.notFound().build();
+    public ResponseEntity<?> showPhoto(@PathVariable Long id) {
+        BasicProductDTO dto = productService.getBasicProduct(id);
+        if (dto == null || dto.getPhoto() == null) return ResponseEntity.notFound().build();
 
-        Path pathPhoto=Paths.get(env.getProperty("directory.photo.product")).resolve(detail.getPhoto()).toAbsolutePath();
-        Resource resource=null;
+        Resource img;
+
         try {
-            resource=new UrlResource(pathPhoto.toUri());
-            if (!resource.exists() || !resource.isReadable())
-                throw new RuntimeException("Error: no se puede cargar la imagen");
-        }catch (MalformedURLException e){
-            e.printStackTrace();
+            img = productService.getImage(dto);
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(img);
+        } catch (MalformedURLException e) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("message", e.getMessage());
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\""+resource.getFilename()+"\"").body(resource);
-
     }
 
     @GetMapping("/available/{id}")
@@ -170,14 +156,14 @@ public class ProductController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (response == null) {
-            return new ResponseEntity<String>("No existe el producto en la BBDD!", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No existe el producto en la BBDD!", HttpStatus.NOT_FOUND);
         }
 
-        return new ResponseEntity<Map<String, Object>>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 
@@ -188,80 +174,65 @@ public class ProductController {
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
-            return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
-        }
-
-        if (!file.isEmpty()) {
-            try {
-                String uniqueFileName=UUID.randomUUID().toString()+"_"+file.getOriginalFilename();
-                Path pathPhoto=Paths.get(env.getProperty("directory.photo.product")).resolve(uniqueFileName).toAbsolutePath();
-                Files.copy(file.getInputStream(),pathPhoto);
-                detailProductDTO.setPhoto(uniqueFileName);
-            } catch (IOException e) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("error", e.getCause().getMessage());
-                map.put("message", "Ocurrió un error al asignar la foto seleccionada");
-                return new ResponseEntity<Map<String, Object>>(map, HttpStatus.BAD_REQUEST);
-            }
-        }
-
-        DetailProductDTO newProductDto;
-        try {
-            newProductDto = productService.create(detailProductDTO);
-        } catch (DataAccessException e) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("error", e.getMostSpecificCause().getMessage());
-            map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        if (newProductDto == null)
-            return new ResponseEntity<String>("La categoria a la que pertenece el producto no existe en la BBDD", HttpStatus.BAD_REQUEST);
-
-        return new ResponseEntity<DetailProductDTO>(newProductDto, HttpStatus.CREATED);
-    }
-
-    @PatchMapping("/update-product/{id}")
-    public ResponseEntity<?> updateCurrentProduct(@Valid @RequestBody DetailProductDTO detailProductDTO, BindingResult result,
-                                                  @PathVariable Long id) {
-
-        if (result.hasErrors()) {
-            Map<String, Object> mistakes = new HashMap<>();
-            result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
-            return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(mistakes, HttpStatus.BAD_REQUEST);
         }
 
         DetailProductDTO dto;
         try {
-            dto = productService.update(detailProductDTO, id);
-        } catch (DataAccessException e) {
+            dto = productService.create(detailProductDTO, file);
+        } catch (RuntimeException e) {
             Map<String, Object> map = new HashMap<>();
-            map.put("error", e.getMostSpecificCause().getMessage());
-            map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            map.put("message", e.getMessage());
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (dto == null)
+            return new ResponseEntity<>("La categoria a la que pertenece el producto no existe en la BBDD", HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/update-product/{id}")
+    public ResponseEntity<?> updateCurrentProduct(@Valid DetailProductDTO detailProductDTO, BindingResult result,
+                                                  @RequestPart MultipartFile file, @PathVariable Long id) {
+
+        if (result.hasErrors()) {
+            Map<String, Object> mistakes = new HashMap<>();
+            result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
+            return new ResponseEntity<>(mistakes, HttpStatus.BAD_REQUEST);
+        }
+
+        DetailProductDTO dto;
+        try {
+            dto = productService.update(id, detailProductDTO, file);
+        } catch (RuntimeException e) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("message", e.getMessage());
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (dto == null) {
-            return new ResponseEntity<String>("No existe el producto en la BBDD ", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No se pudo actualizar el producto en la BBDD ", HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<DetailProductDTO>(dto, HttpStatus.CREATED);
+        return new ResponseEntity<>(dto, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/delete-product/{id}")
-    public ResponseEntity<?> deleteProduct(@PathVariable Long id, @RequestHeader Map<String, Long> headers) {
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id, @RequestHeader Map<String, String> headers) {
         BasicProductDTO basicProductDTO;
 
         try {
-            basicProductDTO = productService.deleteProduct(id, headers);
-        } catch (DataAccessException e) {
+            basicProductDTO = productService.getUniqueProduct(id,headers);
+            if (basicProductDTO!=null){
+                productService.delete(basicProductDTO);
+                return new ResponseEntity<>("Se eliminó correctamente la categoria", HttpStatus.OK);
+            }
+        } catch (RuntimeException e) {
             Map<String, Object> map = new HashMap<>();
-            map.put("error", e.getMostSpecificCause().getMessage());
-            map.put("message", "Ocurrió un error en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            map.put("message", e.getMessage());
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if (basicProductDTO == null)
-            return new ResponseEntity<String>("No existe el producto en la BBDD", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<String>("Se eliminó correctamente el producto", HttpStatus.OK);
+        return new ResponseEntity<>("No existe le producto en la BBDD", HttpStatus.NOT_FOUND);
     }
 
 }

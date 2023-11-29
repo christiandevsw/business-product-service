@@ -12,6 +12,5 @@ public class CategoryDTO {
     private Long id;
     private String name;
     private String description;
-    @JsonIgnore
     private String photo;
 }

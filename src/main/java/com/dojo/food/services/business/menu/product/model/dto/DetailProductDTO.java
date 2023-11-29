@@ -25,7 +25,6 @@ public class DetailProductDTO {
     private BigDecimal dscto;
     private Integer stock;
     private Boolean available;
-    @JsonIgnore
     private String photo;
     @JsonSerialize(using = SetBenefitDTOSerializer.class)
     private Set<BenefitDTO> benefits = new HashSet<>();

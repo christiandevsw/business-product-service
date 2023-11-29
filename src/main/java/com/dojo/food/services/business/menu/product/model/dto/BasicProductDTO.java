@@ -15,5 +15,5 @@ public class BasicProductDTO {
     private BigDecimal price;
     private BigDecimal dscto;
     private String description;
-
+    private String photo;
 }

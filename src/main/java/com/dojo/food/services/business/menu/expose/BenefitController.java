@@ -24,7 +24,7 @@ public class BenefitController {
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
-            return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(mistakes, HttpStatus.BAD_REQUEST);
         }
 
         BenefitDTO benefitDTO;
@@ -34,13 +34,13 @@ public class BenefitController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error al intentar guardar en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (benefitDTO == null)
-            return new ResponseEntity<String>("El producto al que pertenece el beneficio no existe en la BBDD", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("El producto al que pertenece el beneficio no existe en la BBDD", HttpStatus.BAD_REQUEST);
 
-        return new ResponseEntity<BenefitDTO>(benefitDTO, HttpStatus.CREATED);
+        return new ResponseEntity<>(benefitDTO, HttpStatus.CREATED);
     }
 
 
@@ -49,7 +49,7 @@ public class BenefitController {
         if (result.hasErrors()) {
             Map<String, Object> mistakes = new HashMap<>();
             result.getFieldErrors().forEach(error -> mistakes.put(error.getField(), "El campo " + error.getField() + " " + error.getDefaultMessage()));
-            return new ResponseEntity<Map<String, Object>>(mistakes, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(mistakes, HttpStatus.BAD_REQUEST);
         }
 
         BenefitDTO benefitDTO;
@@ -59,13 +59,13 @@ public class BenefitController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error al intentar actualizar en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (benefitDTO == null)
-            return new ResponseEntity<String>("El beneficio no existe en la BBDD", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("El beneficio no existe en la BBDD", HttpStatus.NOT_FOUND);
 
-        return new ResponseEntity<BenefitDTO>(benefitDTO, HttpStatus.CREATED);
+        return new ResponseEntity<>(benefitDTO, HttpStatus.CREATED);
     }
 
     @DeleteMapping("{id}")
@@ -77,12 +77,12 @@ public class BenefitController {
             Map<String, Object> map = new HashMap<>();
             map.put("error", e.getMostSpecificCause().getMessage());
             map.put("message", "Ocurrió un error al intentar actualizar en la BBDD");
-            return new ResponseEntity<Map<String, Object>>(map, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(map, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (benefitDTO == null)
-            return new ResponseEntity<String>("No existe el beneficio en la BBDD", HttpStatus.NOT_FOUND);
-        return new ResponseEntity<String>("Se eliminó correctamente el beneficio", HttpStatus.OK);
+            return new ResponseEntity<>("No existe el beneficio en la BBDD", HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("Se eliminó correctamente el beneficio", HttpStatus.OK);
     }
 
 }
